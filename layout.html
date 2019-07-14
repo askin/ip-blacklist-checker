@@ -1,0 +1,18 @@
+<table border="1">
+    {% for result in results %}
+    <tr>
+        <td id='ip'>{{ result.ip }}</td>
+        <td id='ptr'>{{ result.ptr }}</td>
+        <td id='bls'>
+            <table>
+                {% for blacklist in result.markedLists %}
+                <tr>
+                    <td>{{ blacklist.bl }}</td>
+                    <td>{{ blacklist.answer }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

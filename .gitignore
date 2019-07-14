@@ -1,0 +1,4 @@
+fenv
+*.pyc
+*.log
+config.ini

@@ -1,0 +1,31 @@
+[default]
+send_email = true
+
+[email]
+smtp = smtp.domain.tld
+user = foor@domain.tld
+password = topsecretpass
+port = 587
+
+[email_to_address]
+fancyname@domain.tld
+
+[blacklists]
+spam.spamrats.com
+b.barracudacentral.org
+pbl.spamhaus.org
+sbl.spamhaus.org
+xbl.spamhaus.org
+zen.spamhaus.org
+dnsrbl.org
+
+
+[ip_address]
+# Digital Ocean
+95.85.55.81
+
+#Scaleway
+51.15.223.246
+
+#Blacklisted
+199.212.87.119
