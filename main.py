@@ -11,16 +11,44 @@ import socket
 from jinja2 import Template
 from configparser import ConfigParser
 
-config = ConfigParser(allow_no_value=True)
-config.read('config.ini')
-send_email = config['default'].getboolean('send_email')
+def read_config():
 
-def main():
+    import os
+    if not os.path.exists('config.ini'):
+        print("Error: config file is not found!!!", file=sys.stderr)
+        sys.exit(1)
+
+    config = ConfigParser(allow_no_value=True)
+    config.read('config.ini')
+    send_email = config['default'].getboolean('send_email')
+
+    ip_address = [ip for ip in config['ip_address']]
+
+    to_address = []
+    for address in config['email_to_address']:
+        to_address.append(address)
+
+    email_config = {
+        'to_address': to_address,
+        'mail_user': config['email']['user'],
+        'mail_pwd': config['email']['password'],
+        'smtp': config['email']['smtp'],
+        'smtp_port': config['email']['port']
+    }
+
+    return {
+        'config': config,
+        'email_config': email_config,
+        'send_email': send_email
+    }
+
+def main(all_config):
     endResult = []
+    config = all_config['config']
 
     for serverIp in config['ip_address']:
         try:
-            rt = checkIp(serverIp)
+            rt = checkIp(serverIp, all_config)
             if rt is not None:
                 endResult.append(rt)
         except Exception as err:
@@ -35,26 +63,37 @@ def main():
             hasBlacklisted=True
 
     if hasBlacklisted:
-        notify(endResult)
+        notify(endResult, all_config)
     else:
-        sendRelief()
+        sendRelief(all_config)
 
-def notify(result):
+def notify(result, all_config):
+
+    send_email = all_config['send_email']
+    email_config = all_config['email_config']
+
     template = Template(open('layout.html', 'r').read())
     rst = template.render(results=result)
     if send_email:
-        hermes_notify.warn_html(datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" MAIL SERVER IPS CHECK", rst)
+        hermes_notify.warn_html(datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" MAIL SERVER IPS CHECK", rst, email_config)
     else:
         print(rst)
 
-def sendRelief():
+def sendRelief(all_config):
+
+    send_email = all_config['send_email']
+    email_config = all_config['email_config']
+
     if send_email:
-        hermes_notify.warn(datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" MAIL SERVER IPS CHECK", "HOORAY!! NONE OF THE IPs LISTED!!!")
+        hermes_notify.warn(datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" MAIL SERVER IPS CHECK", "HOORAY!! NONE OF THE IPs LISTED!!!", email_config)
     else:
         print("HOORAY!! NONE OF THE IPs LISTED!!!")
 
 
-def checkIp(serverIp):
+def checkIp(serverIp, all_config):
+
+    config = all_config['config']
+
     reverseIp=getReversedIp(serverIp)
     markedLists=[]
 
@@ -87,4 +126,5 @@ def getReversedIp(serverIp):
 
 
 if __name__ == '__main__':
-    main()
+    config = read_config()
+    main(config)

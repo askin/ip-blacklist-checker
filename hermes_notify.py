@@ -8,19 +8,9 @@ from email.mime.text import MIMEText
 import os
 import datetime
 
-from configparser import ConfigParser
-config = ConfigParser(allow_no_value=True)
-config.read('config.ini')
-
-mail_user = config['email']['user']
-mail_pwd = config['email']['password']
-to_address = []
-for address in config['email_to_address']:
-   to_address.append(address)
-
-def mail(to, subject, text, html=None):
+def mail(to, subject, text, email_config, html=None):
    msg = MIMEMultipart()
-   msg['From'] = mail_user
+   msg['From'] = email_config['mail_user']
    msg['To'] = to
    msg['Subject'] = subject
 
@@ -29,20 +19,20 @@ def mail(to, subject, text, html=None):
    else:
       msg.attach(MIMEText(html, 'html'))
 
-   mailServer = smtplib.SMTP(config['email']['smtp'], config['email']['port'])
+   mailServer = smtplib.SMTP(email_config['smtp'], email_config['smtp_port'])
    mailServer.ehlo()
    mailServer.ehlo()
    mailServer.starttls()
-   mailServer.login(mail_user, mail_pwd)
-   mailServer.sendmail(mail_user, to, msg.as_string())
+   mailServer.login(email_config['mail_user'], email_config['mail_pwd'])
+   mailServer.sendmail(email_config['mail_user'], to, msg.as_string())
    # Should be mailServer.quit(), but that crashes...
    mailServer.close()
 
-def warn_html(subject,content):
-    for address in to_address:
+def warn_html(subject, content, email_config):
+    for address in email_config['to_address']:
         mail(address,subject,content, html=content)
 
 
-def warn(subject,content):
-    for address in to_address:
+def warn(subject, content, email_config):
+    for address in email_config['to_address']:
         mail(address,subject,content)
