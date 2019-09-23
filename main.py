@@ -45,6 +45,8 @@ def read_config():
 def main(all_config):
     endResult = []
     config = all_config['config']
+    email_config = all_config['email_config']
+    send_email = all_config['send_email']
 
     for serverIp in config['ip_address']:
         try:
@@ -62,30 +64,26 @@ def main(all_config):
         if result["status"]=="listed":
             hasBlacklisted=True
 
+    notifyObj = hermes_notify.HermesNotify(**email_config)
+
     if hasBlacklisted:
-        notify(endResult, all_config)
+        notify(endResult, notifyObj, email_config)
     else:
-        sendRelief(all_config)
+        sendRelief(notifyObj, send_email)
 
-def notify(result, all_config):
-
-    send_email = all_config['send_email']
-    email_config = all_config['email_config']
+def notify(result, notifyObj, send_email = False):
 
     template = Template(open('layout.html', 'r').read())
     rst = template.render(results=result)
     if send_email:
-        hermes_notify.warn_html(datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" MAIL SERVER IPS CHECK", rst, email_config)
+        notifyObj.warn_html(datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" MAIL SERVER IPS CHECK", rst)
     else:
         print(rst)
 
-def sendRelief(all_config):
-
-    send_email = all_config['send_email']
-    email_config = all_config['email_config']
+def sendRelief(notifyObj, send_email = False):
 
     if send_email:
-        hermes_notify.warn(datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" MAIL SERVER IPS CHECK", "HOORAY!! NONE OF THE IPs LISTED!!!", email_config)
+        notifyObj.warn(datetime.now().strftime("%Y-%m-%d %H:%M:%S")+" MAIL SERVER IPS CHECK", "HOORAY!! NONE OF THE IPs LISTED!!!")
     else:
         print("HOORAY!! NONE OF THE IPs LISTED!!!")
 
